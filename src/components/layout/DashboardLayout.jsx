@@ -1,4 +1,5 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import toast from 'react-hot-toast'
 import bgPort from '../../assets/bg-port.jpg'
@@ -45,7 +46,16 @@ const roleConfig = {
 export default function DashboardLayout() {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
+  const location = useLocation()
   const config = roleConfig[user?.role] || {}
+  
+  // Estado para controlar el menú desplegable en celulares
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  // Cierra automáticamente el menú móvil cuando el usuario cambia de página
+  useEffect(() => {
+    setIsMobileMenuOpen(false)
+  }, [location])
 
   const handleLogout = () => {
     logout()
@@ -54,7 +64,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="min-h-screen flex relative">
+    <div className="min-h-screen flex relative overflow-x-hidden">
       {/* Subtle background */}
       <div className="fixed inset-0 bg-port-dark" />
       <div
@@ -62,11 +72,22 @@ export default function DashboardLayout() {
         style={{ backgroundImage: `url(${bgPort})` }}
       />
 
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 z-30 flex flex-col
-                        bg-port-navy/95 backdrop-blur-md border-r border-white/5">
+      {/* Oscurecedor de pantalla de fondo (Overlay) cuando el menú móvil está abierto */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Ahora se oculta en móviles y se despliega con animación */}
+      <aside className={`fixed left-0 top-0 h-full w-64 z-40 flex flex-col
+                         bg-port-navy/95 backdrop-blur-md border-r border-white/5
+                         transition-transform duration-300 ease-in-out
+                         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
+                         md:translate-x-0`}>
         {/* Brand */}
-        <div className="px-6 py-6 border-b border-white/5">
+        <div className="px-6 py-6 border-b border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-port-blue/30 border border-port-cyan/30
                             flex items-center justify-center flex-shrink-0">
@@ -85,6 +106,16 @@ export default function DashboardLayout() {
               <div className="text-xs text-slate-500 -mt-0.5">Control Logístico</div>
             </div>
           </div>
+
+          {/* Botón para cerrar menú (Solo visible en celular dentro del menú) */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="md:hidden p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/5"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         {/* User info */}
@@ -96,13 +127,13 @@ export default function DashboardLayout() {
               {config.icon}
             </div>
             <div className="min-w-0">
-              <div className="text-sm font-semibold text-white capitalize">{user?.username}</div>
+              <div className="text-sm font-semibold text-white capitalize truncate">{user?.username}</div>
               <div className={`text-xs font-medium ${config.color}`}>{config.label}</div>
             </div>
           </div>
         </div>
 
-        {/* Navigation — only show the link for this user's role */}
+        {/* Navigation */}
         <nav className="flex-1 px-4 py-4 space-y-1">
           <p className="text-xs text-slate-600 uppercase tracking-widest px-3 mb-3">Módulo</p>
           <NavLink
@@ -131,30 +162,41 @@ export default function DashboardLayout() {
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
+      {/* Main content — Ajustado de 'ml-64' a 'md:ml-64' para remover margen rígido en celular */}
+      <div className="flex-1 md:ml-64 flex flex-col min-h-screen min-w-0 z-10">
         {/* Top navbar */}
-        <header className="sticky top-0 z-20 h-16 flex items-center px-6 gap-4
+        <header className="sticky top-0 z-20 h-16 flex items-center px-4 md:px-6 gap-4
                            bg-port-dark/80 backdrop-blur-md border-b border-white/5">
-          <div className="flex-1">
-            <h1 className={`text-display text-2xl font-bold tracking-wide ${config.color}`}>
+          
+          {/* Botón de hamburguesa para celular */}
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="md:hidden p-2 rounded-xl bg-port-navy/50 border border-white/10 text-white hover:bg-port-navy"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
+          <div className="flex-1 min-w-0">
+            <h1 className={`text-display text-xl md:text-2xl font-bold tracking-wide ${config.color} truncate`}>
               {config.label}
             </h1>
-            <p className="text-xs text-slate-500 -mt-0.5">
+            <p className="text-[10px] md:text-xs text-slate-500 -mt-0.5 truncate">
               {new Date().toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
 
-          {/* Live indicator */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full
-                          bg-emerald-500/10 border border-emerald-500/20">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-slow" />
-            <span className="text-xs text-emerald-400 font-medium">Sistema activo</span>
+          {/* Live indicator — Se achica ligeramente en celular para que no estorbe */}
+          <div className="flex items-center gap-1.5 md:gap-2 px-2.5 py-1 md:py-1.5 rounded-full
+                          bg-emerald-500/10 border border-emerald-500/20 flex-shrink-0">
+            <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-emerald-400 animate-pulse-slow" />
+            <span className="text-[10px] md:text-xs text-emerald-400 font-medium">Activo</span>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-6 relative">
+        <main className="flex-1 p-4 md:p-6 relative min-w-0">
           <div className="animate-fade-in">
             <Outlet />
           </div>
