@@ -12,12 +12,16 @@ const path = require('path');
 const ExcelJS = require('exceljs');
 
 const app = express();
-const PORT = 3001;
+// CAMBIO: Render asigna el puerto dinámicamente en producción
+const PORT = process.env.PORT || 3001; 
 const JWT_SECRET = 'portgate_secret_2024_secure';
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
+
+// CAMBIO: Servir los archivos estáticos de la carpeta 'dist' generada por Vite
+app.use(express.static(path.join(__dirname, '../dist')));
 
 // ─── Database Setup ───────────────────────────────────────────────────────────
 const db = new Database(path.join(__dirname, 'portgate.db'));
@@ -225,14 +229,12 @@ app.delete('/api/gaters/:id', authenticate, authorize('gaters'), (req, res) => {
 app.get('/api/pregate', authenticate, (req, res) => {
   const { search } = req.query;
 
-  // Get all facturacion records
   let factQuery = 'SELECT * FROM facturacion';
   let gateQuery = 'SELECT * FROM gaters';
 
   const facturaciones = db.prepare(factQuery).all();
   const gaters = db.prepare(gateQuery).all();
 
-  // Build pregate view: join by booking or contenedor
   const pregateMap = new Map();
 
   facturaciones.forEach(f => {
@@ -317,7 +319,6 @@ app.get('/api/export/facturacion', authenticate, async (req, res) => {
     { header: 'Fecha',       key: 'created_at',   width: 20 },
   ];
 
-  // Style header row
   const headerRow = ws.getRow(1);
   headerRow.eachCell(cell => {
     cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E4D8C' } };
@@ -327,7 +328,6 @@ app.get('/api/export/facturacion', authenticate, async (req, res) => {
   });
   headerRow.height = 28;
 
-  // Add rows with conditional coloring
   rows.forEach((row, idx) => {
     const dataRow = ws.addRow(row);
     const bg = idx % 2 === 0 ? 'FFF0F4FA' : 'FFFFFFFF';
@@ -336,7 +336,6 @@ app.get('/api/export/facturacion', authenticate, async (req, res) => {
       cell.alignment = { vertical: 'middle' };
     });
 
-    // Color the estado_pago cell
     const estadoCell = dataRow.getCell('estado_pago');
     if (row.estado_pago === 'pago') {
       estadoCell.font = { bold: true, color: { argb: 'FF10B981' } };
@@ -409,8 +408,12 @@ app.get('/api/export/gaters', authenticate, async (req, res) => {
   res.end();
 });
 
+// CAMBIO CRUCIAL: Capturar cualquier otra ruta y responder con el Frontend (Vite)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`\n🚢 PortGate API corriendo en http://localhost:${PORT}`);
-  console.log(`   Usuarios: facturacion/1234 | gaters/1234 | pregate/1234\n`);
+  console.log(`\n🚢 PortGate API corriendo en el puerto ${PORT}`);
 });
