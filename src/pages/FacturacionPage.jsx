@@ -103,8 +103,8 @@ export default function FacturacionPage() {
   const total   = records.length
   const pagos   = records.filter(r => r.estado_pago === 'pago').length
   const noPagos = records.filter(r => r.estado_pago === 'no_pago').length
-  const importe = records.reduce((s, r) => s + (Number(r.importe) || 0), 0)
-
+// CAMBIO 1: Sumar (importe * cantidad) para la tarjeta global
+  const importe = records.reduce((s, r) => s + ((Number(r.importe) || 0) * (Number(r.cantidad) || 0)), 0)
   return (
     <div className="space-y-6 animate-slide-up">
       {/* Stats */}

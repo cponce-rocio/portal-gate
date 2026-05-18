@@ -157,7 +157,7 @@ export default function PregatePage() {
         </div>
       </div>
 
-      {/* Table */}
+     {/* Table */}
       <div className="glass-card overflow-hidden">
         {loading ? <Loader text="Cargando datos de PreGate..." /> : filtered.length === 0 ? (
           <div className="text-center py-16 text-slate-500">
@@ -168,71 +168,100 @@ export default function PregatePage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="data-table">
+            <table className="data-table w-full border-collapse">
               <thead>
-                <tr>
-                  <th>Contenedor</th>
-                  <th>Booking</th>
-                  <th>Cliente</th>
-                  <th>Naviera</th>
-                  <th>Factura</th>
-                  <th>Importe</th>
-                  <th className="text-center">OK Pago</th>
-                  <th className="text-center">OK Autorización</th>
-                  <th className="text-center">Estado General</th>
+                <tr className="text-slate-400 text-xs font-semibold border-b border-white/5">
+                  <th className="text-left px-4 py-3">CONTENEDOR</th>
+                  <th className="text-left px-4 py-3">BOOKING</th>
+                  <th className="text-left px-4 py-3">CLIENTE</th>
+                  <th className="text-left px-4 py-3">NAVIERA</th>
+                  <th className="text-left px-4 py-3">FACTURA</th>
+                  <th className="text-center px-4 py-3 w-40">OK PAGO</th>
+                  <th className="text-center px-4 py-3 w-44">OK AUTORIZACIÓN</th>
+                  <th className="text-center px-4 py-3 w-40">ESTADO GENERAL</th>
                 </tr>
               </thead>
-              <tbody>
-                {filtered.map((row) => (
-                  <tr key={row.key} className={rowStatus(row)}>
-                    <td className="text-mono font-bold text-white">{row.contenedor || '—'}</td>
-                    <td className="text-mono text-xs text-port-cyan">{row.booking || '—'}</td>
-                    <td className="font-medium">{row.cliente || <span className="text-slate-600">Sin datos</span>}</td>
-                    <td>{row.naviera || '—'}</td>
-                    <td className="text-mono text-xs">{row.factura || '—'}</td>
-                    <td className="text-amber-400 font-semibold">
-                      {row.importe != null
-                        ? `$${Number(row.importe).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`
-                        : '—'}
-                    </td>
-                    <td className="text-center">
-                      <div className="flex justify-center">
-                        <OkIndicator ok={row.ok_pago} label={row.ok_pago ? 'Pago' : 'Sin pago'} />
-                      </div>
-                    </td>
-                    <td className="text-center">
-                      <div className="flex justify-center">
-                        <OkIndicator
-                          ok={row.ok_autorizacion}
-                          label={row.ok_autorizacion ? 'Autorizado' : row.autorizacion_linea || 'Sin auth'}
-                        />
-                      </div>
-                    </td>
-                    <td className="text-center">
-                      {row.ok_pago && row.ok_autorizacion ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                                         bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-xs font-bold">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                          </svg>
-                          HABILITADO
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                                         bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          PENDIENTE
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+              <tbody className="divide-y divide-white/[0.02]">
+                {filtered.map((row) => {
+                  const isHabilitado = row.ok_pago && row.ok_autorizacion;
+                  const isPendiente = (row.ok_pago && !row.ok_autorizacion) || (!row.ok_pago && row.ok_autorizacion);
+                  
+                  return (
+                    <tr key={row.id || row.key || row.contenedor} className={`${rowStatus(row)} hover:bg-white/[0.02] transition-colors text-sm`}>
+                      {/* 1. Contenedor */}
+                      <td className="text-mono font-bold text-white px-4 py-3.5 align-middle whitespace-nowrap">
+                        {row.contenedor || '—'}
+                      </td>
+                      
+                      {/* 2. Booking */}
+                      <td className="text-mono text-xs text-slate-400 px-4 py-3.5 align-middle whitespace-nowrap">
+                        {row.booking || '—'}
+                      </td>
+
+                      {/* 3. Cliente */}
+                      <td className="text-slate-300 px-4 py-3.5 align-middle whitespace-nowrap">
+                        {row.cliente || 'Sin datos'}
+                      </td>
+
+                      {/* 4. Naviera */}
+                      <td className="text-slate-400 px-4 py-3.5 align-middle whitespace-nowrap">
+                        {row.naviera || '—'}
+                      </td>
+
+                      {/* 5. Factura */}
+                      <td className="text-mono text-xs text-slate-400 px-4 py-3.5 align-middle whitespace-nowrap">
+                        {row.factura || '—'}
+                      </td>
+                      
+                      {/* 6. OK Pago */}
+                      <td className="px-4 py-3.5 align-middle text-center">
+                        <div className="flex justify-center items-center">
+                          <div className="w-28 inline-block">
+                            <OkIndicator ok={row.ok_pago} label={row.ok_pago ? 'Pago' : 'Sin pago'} />
+                          </div>
+                        </div>
+                      </td>
+                      
+                      {/* 7. OK Autorización */}
+                      <td className="px-4 py-3.5 align-middle text-center">
+                        <div className="flex justify-center items-center">
+                          <div className="w-32 inline-block">
+                            <OkIndicator
+                              ok={row.ok_autorizacion}
+                              label={row.ok_autorizacion ? 'Autorizado' : 'Sin auth'}
+                            />
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* 8. Estado General */}
+                      <td className="px-4 py-3.5 align-middle text-center whitespace-nowrap">
+                        <div className="flex justify-center items-center">
+                          {isHabilitado && (
+                            <span className="px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold tracking-wide uppercase inline-block">
+                              Habilitado
+                            </span>
+                          )}
+                          {isPendiente && (
+                            <span className="px-2.5 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold tracking-wide uppercase inline-block">
+                              Pendiente
+                            </span>
+                          )}
+                          {!row.ok_pago && !row.ok_autorizacion && (
+                            <span className="px-2.5 py-1 rounded bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-bold tracking-wide uppercase inline-block">
+                              Incompleto
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
+        
         {!loading && filtered.length > 0 && (
           <div className="px-4 py-3 border-t border-white/5 text-xs text-slate-500 flex justify-between">
             <span>{filtered.length} de {records.length} registro{records.length !== 1 ? 's' : ''}</span>
@@ -242,7 +271,7 @@ export default function PregatePage() {
           </div>
         )}
       </div>
-
+        
       {/* Legend */}
       <div className="flex flex-wrap gap-4 text-xs text-slate-500">
         <div className="flex items-center gap-2">

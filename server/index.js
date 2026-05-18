@@ -119,52 +119,39 @@ app.get('/api/facturacion', authenticate, (req, res) => {
   let query = 'SELECT * FROM facturacion WHERE 1=1';
   const params = [];
 
-  if (search) {
+  if (search && search.trim() !== '') {
     query += ' AND (cliente LIKE ? OR factura LIKE ? OR booking LIKE ? OR contenedor LIKE ?)';
-    const s = `%${search}%`;
+    const s = `%${search.trim()}%`;
     params.push(s, s, s, s);
   }
+  
   if (estado && estado !== 'todos') {
     query += ' AND estado_pago = ?';
     params.push(estado);
   }
 
   query += ' ORDER BY created_at DESC';
-  const rows = db.prepare(query).all(...params);
-  res.json(rows);
-});
 
-app.post('/api/facturacion', authenticate, authorize('facturacion'), (req, res) => {
-  const { cliente, factura, booking, contenedor, naviera, cantidad, importe, estado_pago, observacion } = req.body;
+  try {
+    const rows = db.prepare(query).all(...params);
+    
+    // Multiplicamos el importe unitario por la cantidad de contenedores/items
+    const formattedRows = rows.map(row => {
+      const cantidad = Number(row.cantidad) || 0;
+      const importeUnitario = Number(row.importe) || 0;
+      
+      return {
+        ...row,
+        // Ahora 'importe' pasa al frontend ya multiplicado por la cantidad
+        importe: importeUnitario * cantidad
+      };
+    });
 
-  if (!cliente || !factura || !booking || !contenedor || !naviera || !cantidad || !importe) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios' });
+    res.json(formattedRows);
+  } catch (error) {
+    console.error("Error en GET /api/facturacion:", error);
+    res.status(500).json({ error: 'Error interno del servidor al obtener facturación' });
   }
-
-  const result = db.prepare(`
-    INSERT INTO facturacion (cliente, factura, booking, contenedor, naviera, cantidad, importe, estado_pago, observacion, created_by)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(cliente, factura, booking, contenedor, naviera, cantidad, importe, estado_pago || 'pendiente', observacion || '', req.user.username);
-
-  const row = db.prepare('SELECT * FROM facturacion WHERE id = ?').get(result.lastInsertRowid);
-  res.status(201).json(row);
-});
-
-app.put('/api/facturacion/:id', authenticate, authorize('facturacion'), (req, res) => {
-  const { cliente, factura, booking, contenedor, naviera, cantidad, importe, estado_pago, observacion } = req.body;
-
-  db.prepare(`
-    UPDATE facturacion SET cliente=?, factura=?, booking=?, contenedor=?, naviera=?, cantidad=?, importe=?, estado_pago=?, observacion=?, updated_at=datetime('now')
-    WHERE id=?
-  `).run(cliente, factura, booking, contenedor, naviera, cantidad, importe, estado_pago, observacion, req.params.id);
-
-  const row = db.prepare('SELECT * FROM facturacion WHERE id = ?').get(req.params.id);
-  res.json(row);
-});
-
-app.delete('/api/facturacion/:id', authenticate, authorize('facturacion'), (req, res) => {
-  db.prepare('DELETE FROM facturacion WHERE id = ?').run(req.params.id);
-  res.json({ success: true });
 });
 
 // ─── GATERS Routes ────────────────────────────────────────────────────────────
