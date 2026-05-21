@@ -8,7 +8,7 @@ import StatCard from '../components/shared/StatCard'
 
 const EMPTY_FORM = {
   cliente: '', factura: '', booking: '', contenedor: '',
-  naviera: '', cantidad: '', importe: '', estado_pago: 'pendiente', observacion: ''
+  naviera: '', cantidad: '', importe: '', estado_pago: 'Autorizo Maritima', observacion: ''
 }
 
 export default function FacturacionPage() {
