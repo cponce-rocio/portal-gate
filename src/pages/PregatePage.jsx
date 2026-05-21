@@ -279,9 +279,9 @@ export default function PregatePage() {
           <span>Pago + Autorización OK → Habilitado para operar</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-6 rounded-sm bg-amber-500" />
-          <span>Uno o ambos pendientes</span>
-        </div>
+          <div className="w-3 h-6 rounded-sm bg-green-500" />
+          <span>Uno o ambos autorizo martima</span>
+        </div> 
         <div className="flex items-center gap-2">
           <div className="w-3 h-6 rounded-sm bg-red-500" />
           <span>Sin pago y sin autorización</span>

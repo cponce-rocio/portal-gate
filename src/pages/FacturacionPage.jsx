@@ -144,7 +144,7 @@ export default function FacturacionPage() {
           onChange={e => setEstado(e.target.value)}
         >
           <option value="todos">Todos los estados</option>
-          <option value="pendiente">Pendiente</option>
+          <option value="pendiente">Autorizo Maritima</option>
           <option value="pago">Pago</option>
           <option value="no_pago">No Pago</option>
         </select>
@@ -268,7 +268,7 @@ export default function FacturacionPage() {
             <div>
               <label className="field-label">Estado de Pago *</label>
               <select className="field" value={form.estado_pago} onChange={e => field('estado_pago', e.target.value)}>
-                <option value="pendiente">Pendiente</option>
+                <option value="pendiente">Autorizo Maritima</option>
                 <option value="pago">Pago</option>
                 <option value="no_pago">No Pago</option>
               </select>
